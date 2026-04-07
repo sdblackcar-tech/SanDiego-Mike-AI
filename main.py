@@ -562,7 +562,8 @@ async def mikey_chat(data: ChatRequest):
         )
         return {"content": response.content[0].text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[MIKEY ERROR] {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
 
 
 # ═══════════════════════════════════════════════════════════════════════
