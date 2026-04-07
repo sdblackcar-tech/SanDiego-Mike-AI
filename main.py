@@ -9,16 +9,16 @@
 #   uvicorn main:app --host 0.0.0.0 --port 8080
 #
 # ENV VARS (.env — never commit this file):
-#   DATABASE_URL=postgresql://user:pass@localhost/ilt_sandiego
+#   DATABASE_URL=postgresql://user:pass@localhost/ilt_sd
 #   REDIS_URL=redis://localhost:6379
 #   STRIPE_SECRET_KEY=sk_live_...
 #   STRIPE_WEBHOOK_SECRET=whsec_...
 #   JAMES_EMAIL=james@sdblackcar.com
-#   OPS_EMAIL=info@sdblackcar.com
-#   GMAIL_SMTP_HOST=smtp.gmail.com
-#   GMAIL_SMTP_PORT=587
-#   GMAIL_SMTP_USER=james@sdblackcar.com
-#   GMAIL_SMTP_PASSWORD=your16charapppassword
+#   OPS_EMAIL=ops@sandiegoblackcarservice.com
+#   O365_SMTP_HOST=smtp.office365.com
+#   O365_SMTP_PORT=587
+#   O365_SMTP_USER=ops@sandiegoblackcarservice.com
+#   O365_SMTP_PASSWORD=your-app-password
 #   ANTHROPIC_API_KEY=sk-ant-...
 #   JWT_SECRET=your-long-random-secret
 # ═══════════════════════════════════════════════════════════════════════
@@ -57,14 +57,12 @@ except Exception as e:
 load_dotenv()
 
 # ─── CONFIG ────────────────────────────────────────────────────────────
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost/ilt_sd")
-DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)   # normalize DO-injected URL
-DATABASE_URL = DATABASE_URL.replace("postgres://",    "postgresql+asyncpg://", 1)   # handle shorthand DO format
+DATABASE_URL       = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost/ilt_sd")
 REDIS_URL          = os.getenv("REDIS_URL", "redis://localhost:6379")
 STRIPE_SECRET      = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SEC = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 JAMES_EMAIL        = os.getenv("JAMES_EMAIL", "james@sdblackcar.com")
-OPS_EMAIL          = os.getenv("OPS_EMAIL", "info@sdblackcar.com")
+OPS_EMAIL          = os.getenv("OPS_EMAIL", "ops@sandiegoblackcarservice.com")
 ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")
 JWT_SECRET         = os.getenv("JWT_SECRET", "ilt-change-this-secret")
 JWT_ALGORITHM      = "HS256"
@@ -96,7 +94,6 @@ app.add_middleware(
         "https://www.sandiegoblackcarservice.com",
         "https://sandiegoblackcarservice.com",
         "https://www.sdblackcar.com",
-        "https://www.luxtourtravel.com",
         "http://localhost:3000",
         "https://ops.sandiegoblackcarservice.com",
         "https://driver.sandiegoblackcarservice.com",
@@ -556,7 +553,7 @@ async def mikey_chat(data: ChatRequest):
         response = anthropic_client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=1000,
-            system=data.system or "You are Mikey, the AI operations intelligence engine for San Diego Black Car and Lux Tour Travel in San Diego. Be concise, professional, and operationally precise.",
+            system=data.system or "You are Mikey, the AI concierge for San Diego Black Car. You are warm, professional, and knowledgeable about San Diego. Respond in the language the client writes in.",
             messages=data.messages
         )
         return {"content": response.content[0].text}
@@ -622,12 +619,6 @@ async def deactivate_driver(driver_name: str, db: AsyncSession = Depends(get_db)
     return {"status": "deactivated", "driver": driver_name}
 
 
-# ═══════════════════════════════════════════════════════════════════════
-# SD DRIVERS — seed via POST /api/drivers after first deploy:
-#   Enrique Cota  · enrique@sdblackcar.com · Senior Chauffeur
-#   Borris Liokumovich · Corporate & VIP specialist  
-#   Oscar Pena    · Airport & Events specialist
-#   Victor Nakada · Luxury Fleet Lead · Group & Coach
 # ═══════════════════════════════════════════════════════════════════════
 # CLIENTS
 # ═══════════════════════════════════════════════════════════════════════
@@ -805,6 +796,56 @@ async def get_client_memory(email: str, db: AsyncSession = Depends(get_db)):
     if redis_client:
         await redis_client.setex(f"memory:{email}", 900, memory)
     return {"memory": memory}
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# STRIPE CHECKOUT SESSION
+# ═══════════════════════════════════════════════════════════════════════
+
+class CheckoutRequest(BaseModel):
+    amount:              float
+    currency:            str            = "usd"
+    email:               Optional[str]  = None
+    name:                Optional[str]  = "Guest"
+    description:         Optional[str]  = "San Diego Black Car Service"
+    confirmation_number: Optional[str]  = None
+    trip_date:           Optional[str]  = None
+    vehicle:             Optional[str]  = None
+    service_type:        Optional[str]  = None
+    legs_count:          Optional[int]  = None
+
+@app.post("/create-checkout-session")
+async def create_checkout_session(data: CheckoutRequest):
+    if not STRIPE_SECRET:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": data.currency,
+                    "unit_amount": int(round(data.amount * 100)),
+                    "product_data": {
+                        "name": data.description or "San Diego Black Car Service",
+                    },
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            customer_email=data.email or None,
+            metadata={
+                "confirmation_number": data.confirmation_number or "",
+                "trip_date":           data.trip_date           or "",
+                "client_name":         data.name                or "",
+                "vehicle":             data.vehicle             or "",
+                "service_type":        data.service_type        or "",
+            },
+            success_url="https://sandiegoblackcarservice.com?payment=success",
+            cancel_url="https://sandiegoblackcarservice.com?payment=cancelled",
+        )
+        return {"url": session.url}
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ═══════════════════════════════════════════════════════════════════════
