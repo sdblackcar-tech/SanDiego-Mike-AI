@@ -274,9 +274,9 @@ nav{top:34px;}
     WhatsApp
   </a>
   <div class="top-bar-div"></div>
-  <a href="mailto:info@sdblackcar.com">
+  <a href="/cdn-cgi/l/email-protection#4a23242c250a392e28262b2921292b3864292527">
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-    info@sdblackcar.com
+    <span class="__cf_email__" data-cfemail="b5dcdbd3daf5c6d1d7d9d4d6ded6d4c79bd6dad8">[email&#160;protected]</span>
   </a>
 </div>
 
@@ -775,11 +775,32 @@ nav{top:34px;}
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 window.addEventListener('scroll',()=>{
-  const n=document.getElementById('nav');
-  if(n) n.classList.toggle('scrolled',window.scrollY>40);
+  const nav=document.getElementById('nav');
+  if(nav) nav.classList.toggle('scrolled', window.scrollY > 40);
 });
-function toggleNav(){document.getElementById('navMob').classList.toggle('open');}
-function closeNav(){document.getElementById('navMob').classList.remove('open');}
-function
+
+function sendToMikey(){
+  const vehicle = document.querySelector('input[name="vehicle"]:checked');
+  const services = [...document.querySelectorAll('input[name="service"]:checked')].map(i=>i.value);
+  const addons   = [...document.querySelectorAll('input[name="addon"]:checked')].map(i=>i.value);
+  const lang     = document.getElementById('bookLang')?.value || 'English';
+
+  if(!vehicle && services.length === 0 && addons.length === 0){
+    alert('Please select at least a vehicle or service type before sending to Mikey.');
+    return;
+  }
+
+  const params = new URLSearchParams();
+  if(vehicle)           params.set('vehicle',  vehicle.value);
+  if(services.length)   params.set('service',  services.join(', '));
+  if(addons.length)     params.set('addons',   addons.join(', '));
+  if(lang)              params.set('lang',     lang);
+
+  window.location.href = 'mikey.html?' + params.toString();
+}
+
+</script>
+</body>
+</html>
