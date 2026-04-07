@@ -58,6 +58,7 @@ load_dotenv()
 
 # ─── CONFIG ────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost/ilt_sd")
+DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)  # normalize DO-injected URL
 REDIS_URL          = os.getenv("REDIS_URL", "redis://localhost:6379")
 STRIPE_SECRET      = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SEC = os.getenv("STRIPE_WEBHOOK_SECRET", "")
