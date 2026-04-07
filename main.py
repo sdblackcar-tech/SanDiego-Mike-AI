@@ -28,6 +28,7 @@ import json
 import random
 import stripe
 import anthropic
+import httpx
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
@@ -69,7 +70,10 @@ JWT_ALGORITHM      = "HS256"
 JWT_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 stripe.api_key   = STRIPE_SECRET
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+anthropic_client = anthropic.Anthropic(
+    api_key=ANTHROPIC_API_KEY,
+    http_client=httpx.Client(http2=False)
+)
 pwd_ctx          = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme    = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
