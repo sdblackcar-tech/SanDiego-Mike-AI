@@ -866,7 +866,7 @@ async function sendMessage() {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'claude-sonnet-4-6',
         max_tokens:maxTok,
         system:sysPrompt,
         messages:conversationHistory,
@@ -885,7 +885,7 @@ async function sendMessage() {
       const res2 = await fetch(`${CONFIG.WORKER_URL}/api/messages`, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTok,system:sysPrompt,messages:conversationHistory})
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTok,system:sysPrompt,messages:conversationHistory})
       });
       const data = await res2.json();
       fullText = data.content?.map(b => b.text || '').join('') || '';
@@ -923,7 +923,7 @@ async function compressHistory() {
   try {
     const res = await fetch(CONFIG.WORKER_URL + '/api/messages', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:summaryPrompt}]})
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:summaryPrompt}]})
     });
     const data = await res.json();
     const summary = data.content?.map(b => b.text || '').join('') || '';
