@@ -730,7 +730,7 @@ footer{background:var(--deep);border-top:1px solid var(--border);padding:64px 56
       <h4>Contact</h4>
       <a href="mikey.html">Talk to Mikey</a>
       <a href="https://wa.me/18589991895" target="_blank" rel="noopener">WhatsApp</a>
-      <a href="mailto:info@sdblackcar.com">info@sdblackcar.com</a>
+      <a href="/cdn-cgi/l/email-protection#224b4c444d625146404e4341494143500c414d4f"><span class="__cf_email__" data-cfemail="751c1b131a350611171914161e1614075b161a18">[email&#160;protected]</span></a>
       <a href="https://www.instagram.com/sandiegoblackcar/" target="_blank" rel="noopener">Instagram @sandiegoblackcar</a>
     </div>
   </div>
@@ -740,7 +740,7 @@ footer{background:var(--deep);border-top:1px solid var(--border);padding:64px 56
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 window.addEventListener('scroll',()=>{
   const n=document.getElementById('nav');
   if(n) n.classList.toggle('scrolled',window.scrollY>40);
@@ -750,9 +750,4 @@ function closeNav(){document.getElementById('navMob').classList.remove('open');}
 function sendToMikey(){
   const v=document.querySelector('input[name="vehicle"]:checked');
   const s=[...document.querySelectorAll('input[name="service"]:checked')].map(i=>i.value);
-  const a=[...document.querySelectorAll('input[name="addon"]:checked')].map(i=>i.value);
-  const lang=document.getElementById('bookLang').value;
-  let msg='Please respond in '+lang+'. ';
-  msg+="I'd like to book a transfer. ";
-  if(v) msg+='Vehicle: '+v.value+'. ';
-  if(s.length) msg+='Service: '+s.join(', ')
+  const a=[...document.querySelectorAll('input[name="addon"]:checked
