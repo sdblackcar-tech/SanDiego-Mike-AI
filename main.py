@@ -554,13 +554,25 @@ async def mikey_chat(data: ChatRequest):
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=500, detail="Anthropic API key not configured")
     try:
-        response = anthropic_client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1000,
-            system=data.system or "You are Mikey, the AI concierge for San Diego Black Car. You are warm, professional, and knowledgeable about San Diego. Respond in the language the client writes in.",
-            messages=data.messages
-        )
-        return {"content": response.content[0].text}
+        async with httpx.AsyncClient(http2=False) as client:
+            r = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 1000,
+                    "system": data.system or "You are Mikey, the AI concierge for San Diego Black Car. You are warm, professional, and knowledgeable about San Diego. Respond in the language the client writes in.",
+                    "messages": [{"role": m["role"], "content": m["content"]} for m in data.messages]
+                },
+                timeout=30.0
+            )
+            r.raise_for_status()
+            result = r.json()
+            return {"content": result["content"][0]["text"]}
     except Exception as e:
         print(f"[MIKEY ERROR] {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
